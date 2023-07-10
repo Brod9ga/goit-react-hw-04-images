@@ -1,46 +1,40 @@
 import PropTypes from 'prop-types';
-import React, { Component } from 'react'
+import React, { useState } from 'react';
 
-export default class Searchbar extends Component {
-    state ={
-        query: '',
-    }
+export const Searchbar = ({ onSubmit }) => {
+  const [query, setQuery] = useState('');
 
-    onChange = event => {
-        this.setState({ query: event.target.value });
-        
-      };
-    
-      onSubmit = event => {
-        event.preventDefault();
-        this.props.onSubmit(this.state.query);
-        this.setState({ query: '' });
-        
-      };
+  const onChange = (event) => {
+    setQuery(event.target.value);
+  };
 
-  render() {
-    return (
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    onSubmit(query);
+    setQuery('');
+  };
+
+  return (
     <header className="searchbar">
-    <form className="form" onSubmit={this.onSubmit}>
-      <button type="submit" className="button" >
-        <span className="button-label">Search</span>
-      </button>
-  
-      <input
-        className="input"
-        type="text"
-        autoComplete="off"
-        autoFocus
-        placeholder="Search images and photos"
-        onChange={this.onChange}
-      />
-    </form>
-  </header>
-      
-    )
-  }
-}
+      <form className="form" onSubmit={handleSubmit}>
+        <button type="submit" className="button">
+          <span className="button-label">Search</span>
+        </button>
+
+        <input
+          className="input"
+          type="text"
+          autoComplete="off"
+          autoFocus
+          placeholder="Search images and photos"
+          value={query} // Добавлено значение value для отображения текущего значения в поле ввода
+          onChange={onChange}
+        />
+      </form>
+    </header>
+  );
+};
 
 Searchbar.propTypes = {
-    onSubmit: PropTypes.func.isRequired,
-}
+  onSubmit: PropTypes.func.isRequired,
+};

@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import Searchbar from './Searchbar/Searchbar';
+import React, { useState } from 'react';
+import {Searchbar} from './Searchbar/Searchbar';
 import axios from 'axios';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
@@ -19,17 +19,15 @@ const toastConfig = {
   theme: 'dark',
 };
 
-export default class App extends Component {
-  state = {
-    images: [],
-    word: '',
-    page: 1,
-    isLoading: false,
-    showModal: false,
-    selectedImage: null,
-  };
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [word, setWord] = useState('');
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  onSubmit = (e) => {
+  const onSubmit = (e) => {
     const wordTrim = e.trim();
     if (wordTrim === '') {
       return toast.error(
@@ -37,71 +35,51 @@ export default class App extends Component {
         toastConfig
       );
     }
-    this.setState({ word: wordTrim, images: [], page: 1 }, this.fetchImages)
+
+    setWord(wordTrim);
+    setImages([]);
+    setPage(1);
+    fetchData(wordTrim, 1);
     
-    this.setState({ word: e }, () => {
-      console.log(this.state.word);
-      this.fetchData();
-    });
   };
 
-onClick = (e) => {
-  this.fetchData()
-}
+  const onClick = () => {
+    fetchData(word, page);
+  };
 
-  fetchData = async () => {
-
-
+  const fetchData = async (word, page) => {
     try {
-      this.setState({ isLoading: true })
+      setIsLoading(true);
       const response = await axios.get(
-        `https://pixabay.com/api/?q=${this.state.word}&page=${this.state.page}&key=36610432-c2e311e7e488000960139023f&image_type=photo&orientation=horizontal&per_page=12`
+        `https://pixabay.com/api/?q=${word}&page=${page}&key=36610432-c2e311e7e488000960139023f&image_type=photo&orientation=horizontal&per_page=12`
       );
-      this.setState({
-        images: [...this.state.images,...response.data.hits],
-        page: this.state.page + 1,
-      });
-     
+      setImages((prevImages) => [...prevImages, ...response.data.hits]);
+      setPage(page + 1);
     } catch (error) {
       console.error(error);
       // Обработка ошибок
-    }finally {
-      this.setState({ isLoading: false });
+    } finally {
+      setIsLoading(false);
       window.scrollTo({
         top: document.documentElement.scrollHeight,
         behavior: 'smooth',
-      })}
+      });
+    }
   };
-  onModalClick = (image) => {
-    console.log(image)
-    this.setState((prevState) => ({
-      showModal: !prevState.showModal,
-      selectedImage: image,
-    }));
+
+  const onModalClick = (image) => {
+    setShowModal((prevState) => !prevState);
+    setSelectedImage(image);
   };
-  render() {
-    return (
-      <div>
-        <Searchbar onSubmit={this.onSubmit} />
-        <ImageGallery images={this.state.images} onClick={this.onModalClick}/>
-        {this.state.images.length > 0 && <Button onClick={this.onClick}>Load More</Button>}
-        {this.state.isLoading && <Loader/>}
-        {this.state.showModal && (
-          <Modal image={this.state.selectedImage} onClose={this.onModalClick} />
-        )}
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-        />
-      </div>
-    );
-  }
-}
+
+  return (
+    <div>
+      <Searchbar onSubmit={onSubmit} />
+      <ImageGallery images={images} onClick={onModalClick} />
+      {images.length > 0 && <Button onClick={onClick}>Load More</Button>}
+      {isLoading && <Loader />}
+      {showModal && <Modal image={selectedImage} onClose={onModalClick} />}
+      <ToastContainer {...toastConfig} />
+    </div>
+  );
+};
